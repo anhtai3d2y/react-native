@@ -1,52 +1,47 @@
-import { StyleSheet, TextInput, Button,Alert, FlatList, ActivityIndicator  } from 'react-native';
-import React, { useState, useEffect } from 'react';
+import { StyleSheet, TextInput, Button } from 'react-native';
+import React, { useState} from 'react';
 
 import { Text, View } from '../components/Themed';
 import { RootTabScreenProps } from '../types';
+import axios from "axios";
 
 export default function TabSignin({ navigation }: RootTabScreenProps<'TabOne'>) {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
 
-  const [isLoading, setLoading] = useState(true);
-  const [data, setData] = useState([]);
+  const [message, setMessage] = useState('');
+  const [id, setId] = useState('');
+  const [username, setUsername] = useState('');
+  const [fullName, setFullName] = useState('');
+  const [phoneNumber, setPhoneNumber] = useState('');
+  const [address, setAddress] = useState('');
 
-
-  const getMoviesFromApi = () => {
-  return fetch('https://kma-gear-backend.herokuapp.com',{
-  method: 'post',
-  headers: {
-    'Accept': 'application/json, text/plain, */*',  // It can be used to overcome cors errors
-    'Content-Type': 'application/json'
-  },
-})
-    .then((response) => response.json())
-    .then((text) => {
-      setLoading(false)
-      console.log(text)
-      // setData(text)
-      return text;
-    })
-    .catch((error) => {
-      console.error(error);
-    });
-  };
-
-  const getMovies = async () => {
-     try {
-      const response = await fetch('https://reactnative.dev/movies.json');
-      const json = await response.json();
-      setData(json.movies);
+  const login =async () => {
+    try {
+      const res = await axios.post('http://192.168.1.59:8080/api/customer-login', {
+        email:email,
+        password: password
+      })
+      if(res.data.errCode === 0){
+        setMessage('')
+        setId(res.data.user.id)
+        setUsername(res.data.user.email)
+        setFullName(res.data.user.fullName)
+        setPhoneNumber(res.data.user.phoneNumber)
+        setAddress(res.data.user.address)
+      }else{
+        setMessage(res.data.message)
+        setId('')
+        setUsername('')
+        setFullName('')
+        setPhoneNumber('')
+        setAddress('')
+      }
+      console.log(res.data)
     } catch (error) {
-      console.error('err: ',error);
-    } finally {
-      setLoading(false);
+      console.log(error)
     }
-  }
-
-  useEffect(() => {
-    getMovies();
-  }, []);
+  };
   return (
     <View style={styles.container}>
       <Text style={styles.title}>Sign in</Text>
@@ -66,19 +61,14 @@ export default function TabSignin({ navigation }: RootTabScreenProps<'TabOne'>) 
       />
       <Button
         title="LOGIN"
-        onPress={() => Alert.alert('Login successfull!')}
+        onPress={login}
       />
-
-      {isLoading ? <ActivityIndicator/> : (
-        <FlatList
-          data={data}
-          keyExtractor={({ id }, index) => id}
-          renderItem={({ item }) => (
-            <Text>{item.title}, {item.releaseYear}</Text>
-          )}
-        />
-      )}
-
+      <Text style={styles.title}>{message ? message : ''}</Text>
+      <Text style={styles.title}>{id ? 'Id:' : ''} {id}</Text>
+      <Text style={styles.title}>{username ? 'Email:' : ''} {username}</Text>
+      <Text style={styles.title}>{fullName ? 'Fullname:' : ''} {fullName}</Text>
+      <Text style={styles.title}>{phoneNumber ? 'Phonenumber:' : ''} {phoneNumber}</Text>
+      <Text style={styles.title}>{address ? 'Address' : ''} {address}</Text>
     </View>
   );
 }
